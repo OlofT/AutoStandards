@@ -79,7 +79,7 @@ You can now remove or modify AutoStandardSettings.json and start defining your o
 
 ##Why are storyboards/xib/nibs bad?
 
-They are not always bad, it depends a lot on your situation. If you are working with people that won't read code (which does not have to be a bad thing - everyone shouldn't need to be a coder), then this is not for you. Also, if someone else are paying you by the hour, why automate in the first place? I like to see my interfaces before building them, so I usually draw them on paper first and then implement them in code. But it must be said, not seeing the interface when creating it, is harder.
+They are not always bad, it depends a lot on your situation. If you are working with people that won't read code (which does not have to be a bad thing - everyone shouldn't need to be a coder), then this is not for you. Also, if someone else are paying you by the hour, why automate in the first place? I like to see my interfaces before building them, so I usually draw them on paper first and then implement them in code. But it must be said: it is harder to not see the interface when creating it.
 
 Using nibs (I will from here on call all storyboards/xibs for nibs) are bad in a couple of ways:
 
