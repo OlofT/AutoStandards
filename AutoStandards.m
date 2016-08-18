@@ -12,6 +12,8 @@
 
 @implementation AutoStandards
 
+//NS_ASSUME_NULL_BEGIN
+
 static AutoStandards *sharedInstance = nil;
 static CGSize standardCellSize;
 

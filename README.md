@@ -90,6 +90,7 @@ Using nibs (I will from here on call all storyboards/xibs for nibs) are bad in a
 4. Version control becomes a special type of hell.
 6. Code reuse for nibs are more or less impossible (at least impractical). Even copying stuff from a nib usually goes wrong or isn't worth the trouble.
 7. Everything you can do with nibs can also be done in code, but the reverse is not always true.
+8. Nibs are not automatic.
 
 ##Swift?
 
