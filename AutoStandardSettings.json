@@ -1,0 +1,42 @@
+{
+	"AutoColors" : 
+    {
+		"AutoColorMainViewBackground" : [1.000, 0.753, 0.79, 1],
+		"AutoColorLighterViewBackground" : [1.000, 0.753, 0.79, 1],
+		"AutoColorOverlayViewBackground" : [1.000, 0.753, 0.79, 1],
+        "AutoColorBarBackground" : [1.000, 0.753, 0.79, 1],
+		"AutoColorUnselectedCell" : [1.000, 1, 1, 1],
+		"AutoColorSelectedCell" : [0.000, 0.753, 0.79, 1],
+		"AutoColorTintColor" : [1.000, 0, 0, 1],
+		"AutoColorDeleteColor" : [1.000, 0.753, 0.79, 1],
+		"AutoColorCellSeparator" : [1.000, 0.753, 0.79, 1],
+        "AutoColorMenuText" : [0, 0, 0, 1],
+        "AutoColorBodyText" : [0, 0, 0, 1],
+        "AutoColorError" : [1, 0, 0, 1],
+        "AutoColorOK" : [0, 1, 0, 1],
+        "AutoColorHighlightColor" : [1, 1, 1, 1],
+        "AutoColorArray": [ [0.1, 0.1, 1.0, 0.4], [0.988, 0.255, 1.000, 1.000], [0.984, 0.298, 0.329, 1.000], [0.992, 0.525, 0.325, 1.000], [0.996, 0.761, 0.329, 1.000], [0.357, 1.000, 0.757, 1.000], [0.329, 0.514, 1.000, 1.000], [0.988, 0.255, 1.000, 1.000] ]
+	},
+	"AutoFont" : "Party LET",
+    "AlternativeAppearances" : 
+    {
+        "DarkMode" : 
+        {
+        
+            "AutoColorMainViewBackground" : [0.1, 0.1, 0.1, 1],
+            "AutoColorLighterViewBackground" : [0.1, 0.1, 0.1, 1],
+            "AutoColorOverlayViewBackground" : [0.1, 0.1, 0.1, 1],
+            "AutoColorBarBackground" : [0.1, 0.1, 0.1, 1],
+            "AutoColorUnselectedCell" : [1.000, 1, 1, 1],
+            "AutoColorSelectedCell" : [0.000, 0.753, 0.79, 1],
+            "AutoColorTintColor" : [1.000, 0.753, 0.79, 1],
+            "AutoColorDeleteColor" : [1.000, 0.1, 0.1, 1],
+            "AutoColorCellSeparator" : [1.000, 0.753, 0.79, 1],
+            "AutoColorMenuText" : [1, 1, 1, 1],
+            "AutoColorBodyText" : [1, 1, 1, 1],
+            "AutoColorError" : [1, 0, 0, 1],
+            "AutoColorOK" : [0, 1, 0, 1],
+            "AutoColorHighlightColor" : [0, 0, 0, 1],
+        }
+    }
+}
