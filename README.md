@@ -30,7 +30,7 @@ in the .m file we have this:
 
 Notice that the rects have the same names as the UI elements. This is what links them together without using any code.
 
-It is convenient to use viewWillLayoutSubviews for setting the frames, but it is usually better to do it once in viewWillAppear: and will
+It is convenient to use viewWillLayoutSubviews for setting the frames, but it is usually better to do it once in viewWillAppear: and willTransitionToSize: (depending on how you want/need to control things).
 
 	- (void) viewWillLayoutSubviews
 	{
