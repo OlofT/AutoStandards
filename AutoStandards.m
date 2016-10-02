@@ -1748,13 +1748,33 @@ CGFloat standardStatusBarHeight()
 
 - (void) updateAppearance
 {
-    dispatch_async(dispatch_get_main_queue(), ^(void)
+    if (![NSThread isMainThread])
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self updateAppearance]; });
+        return;
+    }
+    
+    //in order to animate nav-bars we must hide it and display it - only necessary to fiddle with the root view controllers nav-controller, likely the root-controller is the nav-controller.
+    
+    UIViewController *root = [UIApplication sharedApplication].keyWindow.rootViewController;
+    UINavigationController *nav;
+    if ([root isKindOfClass:[UINavigationController class]]) nav = (UINavigationController*)root;
+    else nav = root.navigationController;
+    [nav setNavigationBarHidden:YES animated: NO];
+    
+    dispatch_block_t updateBlock = ^(void)
     {
         for (UIView *view in self.viewsWithActions)
         {
             [self updateAppearanceForView:view];
         }
-    });
+    };
+    
+    UIViewAnimationOptions standardOptions = UIViewAnimationOptionAllowUserInteraction | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut;
+    [UIView animateWithDuration:0.4 delay:0 options: standardOptions animations:updateBlock completion:^(BOOL finished)
+    {
+        [nav setNavigationBarHidden:NO animated: NO];
+    }];
 }
 
 ///Change colors and other appearance elements for each view in the controller
