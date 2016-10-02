@@ -1758,18 +1758,19 @@ CGFloat standardStatusBarHeight()
     // NOTE: You also have presentedViewController, UITabBarController...
     
     UIViewController *root = [UIApplication sharedApplication].keyWindow.rootViewController;
+    if (root.presentedViewController)
+    {
+        root = root.presentedViewController;
+    }
+    if ([root isKindOfClass:[UITabBarController class]])
+    {
+        root = ((UITabBarController*)root).selectedViewController;
+    }
+    
     UINavigationController *nav;
     if ([root isKindOfClass:[UINavigationController class]]) nav = (UINavigationController*)root;
     else nav = root.navigationController;
-    
-    /*
-     something like this...
-    if (nav.presentedViewController)
-    {
-        nav = nav.presentedViewController.navigationController;
-    }
-     */
-    [nav setNavigationBarHidden:YES animated: NO];
+    if (nav) [self updateAppearanceForView:nav.navigationBar];
     
     dispatch_block_t updateBlock = ^(void)
     {
@@ -1780,10 +1781,7 @@ CGFloat standardStatusBarHeight()
     };
     
     UIViewAnimationOptions standardOptions = UIViewAnimationOptionAllowUserInteraction | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut;
-    [UIView animateWithDuration:0.4 delay:0 options: standardOptions animations:updateBlock completion:^(BOOL finished)
-    {
-        [nav setNavigationBarHidden:NO animated: NO];
-    }];
+    [UIView animateWithDuration:0.4 delay:0 options: standardOptions animations:updateBlock completion:nil];
 }
 
 ///Change colors and other appearance elements for each view in the controller
