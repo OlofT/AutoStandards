@@ -1755,11 +1755,20 @@ CGFloat standardStatusBarHeight()
     }
     
     //in order to animate nav-bars we must hide it and display it - only necessary to fiddle with the root view controllers nav-controller, likely the root-controller is the nav-controller.
+    // NOTE: You also have presentedViewController, UITabBarController...
     
     UIViewController *root = [UIApplication sharedApplication].keyWindow.rootViewController;
     UINavigationController *nav;
     if ([root isKindOfClass:[UINavigationController class]]) nav = (UINavigationController*)root;
     else nav = root.navigationController;
+    
+    /*
+     something like this...
+    if (nav.presentedViewController)
+    {
+        nav = nav.presentedViewController.navigationController;
+    }
+     */
     [nav setNavigationBarHidden:YES animated: NO];
     
     dispatch_block_t updateBlock = ^(void)
