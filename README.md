@@ -94,7 +94,7 @@ Using nibs (I will from here on call all storyboards/xibs for nibs) are bad in a
 
 ##Swift?
 
-There will be support for Swift in the future, I am still waiting for NS\_ASSUME\_NULL (at the moment we only have NS\_ASSUME\_NONNULL). I would like to do a complete rewrite in Swift, but since Swift lacks dynamism it does not seem possible at the moment, perhaps will be possible in the future. Swift 4 is supposed to get a lot more dynamism.
+There will be support for Swift in the future, I am still waiting for NS\_ASSUME\_NULL (at the moment we only have NS\_ASSUME\_NONNULL). I would like to do a complete rewrite in Swift, but I don't have much time, and can't let it go to waste.
 
 ##Auto Layout
 
