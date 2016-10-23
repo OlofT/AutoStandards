@@ -291,7 +291,7 @@ void AutoSliceRect(CGRect *rect,  CGFloat amount, CGRectEdge edge);
  @param values The keys and values for the keypaths to be set for the views. On the form { key_path : value } where value can be a single value (to assign every view the same value) or an array (to assign different values for all views).
  @param views The views to assign values. Remember, it uses setValue:forKeyPath: so it works with everything that supports the NSKeyValueCoding setValue:forKeyPath: keyPaths (it does not have to be UIViews). Ex, @"layer.borderWidth" : @1 works fine for every view, @"adjustsImageWhenDisabled": @0, works for all buttons.
  **/
-+ (void) setValues:(NSDictionary*)lists forViews:(UIView*)firstPointer, ... AUTO_NIL_ENDING;
++ (void) setValues:(NSDictionary*)values forViews:(UIView*)views, ... AUTO_NIL_ENDING;
 ///set images or names(titles) on several buttons at once.
 + (void) setButtons:(NSArray*)buttons imagesOrNames:(NSArray*)imageArray tint:(BOOL)tint orColor:(UIColor*)color;
 

@@ -201,16 +201,27 @@ static CGSize standardCellSize;
         //NOTE! If you have a navigation-bar, the status bar background will be set by the nav-bars barStyle.
         //SO: in general this has no effect at all!
         
-        //We have access to the uiapplication class - TODO: double check that this actually works.
+        //We have access to the uiapplication class
+        UIStatusBarStyle newStyle;
         if ([AutoStandards colorIsDark:[self standardColor:AutoColorBarBackground]])
         {
-            [[uiApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+            newStyle = UIStatusBarStyleLightContent;
         }
         else
         {
             //The text color in the menu is dark - lets also set the statusBar's text to dark - light content means dark text!
-            [[uiApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleDefault];
+            newStyle = UIStatusBarStyleDefault;
         }
+        
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wdeprecated"
+        
+        if ([[uiApplication sharedApplication] respondsToSelector:@selector(setStatusBarStyle:)])
+        {
+            [[uiApplication sharedApplication] setStatusBarStyle:newStyle];
+        }
+        
+        #pragma clang diagnostic pop
         
         //we set tint color on the main window which will propagate to all views where their superviews tint-color is not set.
         [[uiApplication sharedApplication] keyWindow].tintColor = tintColor;
