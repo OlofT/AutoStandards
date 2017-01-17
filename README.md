@@ -1,5 +1,5 @@
 # AutoStandards
-Automatic GUI creation for iOS by using standards. Instead of having some GUI-code in xib or storyboard files, and some in code - have everything in one place. If you want to change the font for every label and button? Change it once for all your application. Instead of going through every view in every xib to change the background color, define a standard for what background color means and change it once. Confused by what I mean with "a standard"? Just read on!
+Automatic GUI creation for iOS by using standards. Instead of having some GUI-code in xib or storyboard files, and some in code - have everything in one place. If you want to change the font for every label and button? Change it once for all your application. Instead of going through every view in every xib to change the background color, define a standard for "background color" and change it once - everything that use "background color" will be updated. Confused by what I mean with "a standard"? Just read on!
 
 Bonus: Also supports multiple standards, so you can switch between e.g. "dark mode" and "light mode" in one go.
 
@@ -30,7 +30,7 @@ in the .m file we have this:
 
 Notice that the rects have the same names as the UI elements. This is what links them together without using any code.
 
-It is convenient to use viewWillLayoutSubviews for setting the frames, but it is usually better to do it once in viewWillAppear: and will
+It is convenient to use viewWillLayoutSubviews for setting the frames, but it is usually better to do it once in viewWillAppear: and willTransitionToSize: (depending on how you want/need to control things).
 
 	- (void) viewWillLayoutSubviews
 	{
@@ -94,16 +94,11 @@ Using nibs (I will from here on call all storyboards/xibs for nibs) are bad in a
 
 ##Swift?
 
-There will be support for Swift in the future, I am still waiting for NS\_ASSUME\_NULL (at the moment we only have NS\_ASSUME\_NONNULL). I would like to do a complete rewrite in Swift, but since Swift lacks dynamism it does not seem possible at the moment, perhaps will be possible in the future. Swift 4 is supposed to get a lot more dynamism.
+There will be support for Swift in the future, I am still waiting for NS\_ASSUME\_NULL (at the moment we only have NS\_ASSUME\_NONNULL). I would like to do a complete rewrite in Swift, but I don't have much time, and can't let it go to waste.
 
 ##Auto Layout
 
 AutoStandards should work well with auto layout, I'm not using that myself but it should work fine, as long as you define your constraints in code. You also need to set translatesAutoresizingMaskIntoConstraints = NO for every view, which can easily be done by subclassing AutoStandards.
-
-##Want to help out?
-
-Just try it out and use it in a few view controllers. Can it become even more automatic without becoming a big mess?
-Otherwise, the project really needs better testing, to verify that everything works in every possible case. I have only done manual testing this far. 
 
 #Details
 
@@ -114,9 +109,9 @@ AutoStandards uses NSCache in order to only process each controller class once a
 
 It works fine for automatically creating table cells, which is one of the heaviest operation AutoStandards performs.
 
-##Color definitions
+##Color definitions (standards)
 
-When starting out I was thinking a lot about CSS, where everything has a style and if you want an element to look a certain way - you apply that style to the element. I wanted something easier and more functional-oriented. Instead of styles which defined colors for different looks, I wanted to have colors defined for different purposes. The functionality of a warning label is to tell the user something important (if you delete this item, it will be gone forever). Both the warning label and "affirmative" button could use the same color scheme. All controllers have a main view, and those have the same background color - the purpose of that color is to be a background color of main views. It seemed to me that for iOS apps we didn't need to go the CSS way but instead could have a more direct, functional approach (what are the color ment for). Today I'm not so sure anymore. I think the best way is a combination of the two, and perhaps I will build support for that in the future. It is however very easy to work with, just follow this simple steps:
+When starting out I was thinking a lot about CSS, where everything has a style and if you want an element to look a certain way - you apply that style to the element. I wanted something easier and more functional-oriented. Instead of styles which defined colors for different looks, I wanted to have colors defined for different purposes. The functionality of a warning label is to tell the user something important (if you delete this item, it will be gone forever). Both the warning label and "affirmative" button could use the same color scheme. All controllers have a main view, and those have the same background color - the purpose of that color is to be a background color of main views. It seemed to me that for iOS apps we didn't need to do things the CSS way but instead could have a more direct, functional approach (what are the color ment for). Today I'm not so sure anymore. I sometimes want to use both methods, and perhaps I will build support for that in the future. It is however very easy to work with, just follow this simple steps:
 
 1. Define your color scheme in the json or in a dictionary (more dynamically defined colors below). Set e.g. AutoColorMainViewBackground to a bright color, so your main views like your collection views get a bright background.
 2. For your own views, or classes unknown to AutoStandards, call [AutoStandards color:AutoColorMainViewBackground forView:theView method:AutoSetValueBackgroundColor];
@@ -132,14 +127,13 @@ Think of it as defining a standard for your views and then applying that standar
 
 ##Dynamically defined colors - no Appearance Proxy
 
-It is built for easy updating of colors and fonts, just feed it new definitions by calling [[AutoStandards sharedInstance] parseSettings:settingsDictionary update:YES];
+AutoStandards is built for easy updating of colors and fonts, just feed it new definitions by calling [[AutoStandards sharedInstance] parseSettings:settingsDictionary update:YES];
 
 This settings can be a JSON you download from the web, or defined by the user. A major difference from Appearance Proxy, and why that isn't used, is that everything is changed at once. Even already created views get new values. Another drawback of Appearance Proxy is that it only deals with classes. If you have a cancel button, or warning label, that should look different from "ok" buttons or regular labels - it simply cannot be done with Appearance Proxy. You will then need to build extra code just to set appearances of these elements.
 
 ##Controllers / Containers
 
-Everything that have views can be considered a controller in the eyes of AutoStandards. A view with subviews, e.g. a table view, or even a tableView cell can be used as a controller. "Superview" is also a bad word since actual controllers aren't views. "Containers" would probably be a better term, but this sounds confusing to me and I hope you will understand anyway.
-
+AutoStandard can handle everything that is a "container" of views, that is most controllers and views with subviews. Since "Containers" sounds a bit confusing I choose to use the word "controller" instead, and I hope you will understand anyway. This means that everything that have views can be considered a controller in the eyes of AutoStandards. A view with subviews, e.g. a table view, or even a tableView cell can be used as a controller. "Superview" is also a bad word since actual controllers aren't views. 
 
 ##ARC
 

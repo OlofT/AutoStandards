@@ -201,16 +201,27 @@ static CGSize standardCellSize;
         //NOTE! If you have a navigation-bar, the status bar background will be set by the nav-bars barStyle.
         //SO: in general this has no effect at all!
         
-        //We have access to the uiapplication class - TODO: double check that this actually works.
+        //We have access to the uiapplication class
+        UIStatusBarStyle newStyle;
         if ([AutoStandards colorIsDark:[self standardColor:AutoColorBarBackground]])
         {
-            [[uiApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+            newStyle = UIStatusBarStyleLightContent;
         }
         else
         {
             //The text color in the menu is dark - lets also set the statusBar's text to dark - light content means dark text!
-            [[uiApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleDefault];
+            newStyle = UIStatusBarStyleDefault;
         }
+        
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wdeprecated"
+        
+        if ([[uiApplication sharedApplication] respondsToSelector:@selector(setStatusBarStyle:)])
+        {
+            [[uiApplication sharedApplication] setStatusBarStyle:newStyle];
+        }
+        
+        #pragma clang diagnostic pop
         
         //we set tint color on the main window which will propagate to all views where their superviews tint-color is not set.
         [[uiApplication sharedApplication] keyWindow].tintColor = tintColor;
@@ -1748,13 +1759,40 @@ CGFloat standardStatusBarHeight()
 
 - (void) updateAppearance
 {
-    dispatch_async(dispatch_get_main_queue(), ^(void)
+    if (![NSThread isMainThread])
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{ [self updateAppearance]; });
+        return;
+    }
+    
+    //in order to animate nav-bars we must hide it and display it - only necessary to fiddle with the root view controllers nav-controller, likely the root-controller is the nav-controller.
+    // NOTE: You also have presentedViewController, UITabBarController...
+    
+    UIViewController *root = [UIApplication sharedApplication].keyWindow.rootViewController;
+    if (root.presentedViewController)
+    {
+        root = root.presentedViewController;
+    }
+    if ([root isKindOfClass:[UITabBarController class]])
+    {
+        root = ((UITabBarController*)root).selectedViewController;
+    }
+    
+    UINavigationController *nav;
+    if ([root isKindOfClass:[UINavigationController class]]) nav = (UINavigationController*)root;
+    else nav = root.navigationController;
+    if (nav) [self updateAppearanceForView:nav.navigationBar];
+    
+    dispatch_block_t updateBlock = ^(void)
     {
         for (UIView *view in self.viewsWithActions)
         {
             [self updateAppearanceForView:view];
         }
-    });
+    };
+    
+    UIViewAnimationOptions standardOptions = UIViewAnimationOptionAllowUserInteraction | UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut;
+    [UIView animateWithDuration:0.4 delay:0 options: standardOptions animations:updateBlock completion:nil];
 }
 
 ///Change colors and other appearance elements for each view in the controller
