@@ -1,5 +1,5 @@
 # AutoStandards
-Automatic GUI creation for iOS by using standards. Instead of having some GUI-code in xib or storyboard files, and some in code - have everything in one place. If you want to change the font for every label and button? Change it once for all your application. Instead of going through every view in every xib to change the background color, define a standard for "background color" and change it once - everything that use "background color" will be updated. Confused by what I mean with "a standard"? Just read on!
+Automatic GUI creation for iOS by using standards. Instead of having some GUI-code in xib or storyboard files, and some in code - have everything in one place. If you want to change the font for every label and button? Change it once for all your application. Instead of going through every view in every xib to change the background color, define a standard for "background color" and change it once - everything that use "background color" will be updated. Confused by what I mean with "a standard"? Just read on! (for more on this see [my blog post about this](http://aggressive.se/blog/#removing-storyboards-and-xib-files-to-save-time-and-money)).
 
 Bonus: Also supports multiple standards, so you can switch between e.g. "dark mode" and "light mode" in one go.
 
