@@ -7,6 +7,9 @@
 //
 
 @import UIKit;
+#import "AutoThreadFunctions.h"
+
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
 /**
  Short how-to:
  
@@ -46,8 +49,41 @@
  
  If you have downloaded a new dictionary, you need to call updateAppearance, to get the new values.
  
+ If you want to update values "manually" use e.g. this to set a views background color to the mainViewBackgroundColor:
+ [[AutoStandards sharedInstance] color:AutoColorMainViewBackground forView:self method:AutoSetValueBackgroundColor];
+ 
+ Specifying button images and titles can be done somewhat easier, by having auto-standards ask you about the setup. Just respond to
+ 
+ 
+ NOTE: REMEMBER:
+ 
+ when laying out a regular view under a UINavigationBar/UINavigationController, you must look at the topLayoutGuide to know where the view starts, if its a UIScrollView you can use contentInset.top instead. Like this:
+ 
+ if ([self respondsToSelector:@selector(topLayoutGuide)])
+ {
+    CGFloat topBarOffset = self.topLayoutGuide.length;
+    AutoSliceRect(&contentRect, topBarOffset, CGRectMinYEdge);
+ }
+ 
+ //Compiler warnings
+ * PerformSelector may cause a leak...
+ 	shown since ARC don't know what to do with the returned value. Can be ignored if no methods nor return values.
+ 
+ From SO:
+ SEL selector = NSSelectorFromString(@"someMethod");
+ IMP imp = [_controller methodForSelector:selector];
+ void (*func)(id, SEL) = (void *)imp;
+ func(_controller, selector);
+ 
+ When the selector takes arguments or returns a value, you'll have to change things a bit:
+ 
+ SEL selector = NSSelectorFromString(@"processRegion:ofView:");
+ IMP imp = [_controller methodForSelector:selector];
+ CGRect (*func)(id, SEL, CGRect, UIView *) = (void *)imp;
+ CGRect result = _controller ? func(_controller, selector, someRect, someView) : CGRectZero;
  */
 
+//called with "name" if the appearance has a name and "dark" if mainBackgroundIsDark
 #define AutoStandardsHasUpdatedAppearance @"AutoStandardsHasUpdatedAppearance"
 #define AutoStandardAppearance @"AutoStandard"
 #define AUTO_NIL_ENDING __attribute__ ((__sentinel__))
@@ -104,7 +140,7 @@ typedef NS_ENUM(NSUInteger, AutoColor)
     AutoColorSpecific_28,
     AutoColorSpecific_29,
     AutoColorSpecific_30,
-    AutoColorNothing,
+	AutoColorNothing,
 };
 
 //let everybody know how many defined colors there are
@@ -115,26 +151,30 @@ typedef NS_ENUM(NSUInteger, AutoFont)
     AutoFontTitle,
     AutoFontSubTitle,
     AutoFontBody,
-    AutoFontLabel
+    AutoFontLabel,
+    AutoFontSmall
 };
 
 //Minimize stringly typing by defining what keys can be used when setting colors on objects
 typedef NS_ENUM(NSUInteger, AutoSetValue)
 {
-    AutoSetValueTitleNormalColor = 1,
-    AutoSetValueTitleHighlightColor,
-    AutoSetValueBackgroundColor,
-    AutoSetValueTextColor,
-    AutoSetValueTintColor,
+    AutoSetValueTitleNormalColor = 1,   //Text color for buttons
+    AutoSetValueTitleHighlightColor,    //Text color for highlighted buttons
+    AutoSetValueBackgroundColor,        //Background color for all views
+    AutoSetValueTextColor,              //Text color for labels
+    AutoSetValueTintColor,              //Tint color for all views
     AutoSetValueOnTintColor,
-    AutoSetValueBorderColor,
-    AutoSetValueProgressTintColor,
-    AutoSetValueMenuTextAttributes,
+    AutoSetValueBorderColor,            //Border color for buttons
+    AutoSetValueProgressTintColor,      //progressTintColor on a UIProgressView
     
-    AutoSetValueTitleTextAttributes,
-    AutoSetValueTitleTextAttributesNormalState,
-    AutoSetValueTitleTextAttributesHighligtedState,
+    AutoSetValueMenuTextAttributes,     //same as AutoSetValueTitleTextAttributes
+    AutoSetValueTitleTextAttributes,                //calls setTitleTextAttributes: with font and color
+    AutoSetValueDefaultTextAttributes,                //calls setDefaultTextAttributes: with font and color
+    AutoSetValueTitleTextAttributesNormalState,     //calls setTitleTextAttributes: forState:UIControlStateNormal with font and color
+    AutoSetValueTitleTextAttributesHighligtedState, //calls setTitleTextAttributes: forState:UIControlStateHighlighted with font and color
     AutoSetValueFont,
+    
+    AutoSetValueProtocol    //calls setAutoColor:(AutoColor)autoColor forColor:(UIColor*)color; for the view asuming it implements this method. Use this to get callbacks when colors change to set intrigate schemes - like gradients or other color properties that are too esotheric for the regular setters. See AutoSectionHeaderView for example. 
 };
 
 /**
@@ -158,8 +198,84 @@ typedef NS_ENUM(NSUInteger, AutoSetValue)
  
  #define AutoColorUserMessage AutoColorSpecific_0
  #define AutoColorUserMessageText AutoColorSpecific_1
+ 
+ AutoNavBarStyle is also a special key in the AutoStandardSettings json file. If set, navBars will be transparent with blur: darkBlur if mainViewBackground is dark, otherwise whiteBlur.
  */
 
+
+bool autoCstrEndsWith(const char * str, const char * suffix);
+
+typedef void(^AutoButtonSetupBlock)(UIImage* image, UIImage* highlight, NSString* title, BOOL useTintedHighlight);
+
+///Conform to this protocol to get additional setup methods which need to be unique for each view, and because of that can be difficult to automate.
+@protocol AutoStandardDelegate <NSObject>
+
+@optional
+
+///Report your special element classes, on the form: @{ @"variableName" : @"autoClassName", @"titleLabel" : @"title", @"descriptionLabel" : @"body" };
+- (NSDictionary*) elementClasses;
+
+/**
+ use like this: [[AutoStandards sharedInstance] color:AutoColorMainViewBackground forView:self method:AutoSetValueProtocol];
+ to get called with both the color AutoColorMainViewBackground for this method. To be called for another color, just call this with another enum
+ **/
+- (void) setAutoColor:(AutoColor)autoColor forColor:(UIColor*)color;
+
+/** 
+ For unique setups of buttons, add this into your delegate, create the images or title (null for those you don't want to use) and it will be automatically setup.
+ If your view is called "closeButton" you can use "closeButtonSetup:" instead (without the forView:)
+ 
+ here is an example from a viewController:
+
+- (void) closeButtonSetup:(AutoButtonSetupBlock)setupBlock
+{
+    UIImage *image = [UIImage imageNamed:@"close"];
+    AutoStandards *standards = [AutoStandards sharedInstance];
+    UIImage *highlight = [standards tintedImage:image color:[standards standardColor:AutoColorHighlightColor]];
+    image = [standards tintedImage:image];
+    setupBlock(image, highlight, nil, NO);
+}
+**/
+
+//We are not using this since why would we? also - we must set the button first before we can call the method (slow and boring). Just claim to implement AutoStandardDelegate and do as the above example instead.
+//- (void) buttonSetup:(AutoButtonSetupBlock)setupBlock forView:(UIButton*)view;
+
+@end
+
+//we have to protocols AutoStandardDelegate (for controllers) and AutoStandardElement (for views and sub-controllers)
+
+@class AutoStandards;
+//To automatically have autoStandards call your view's/controller's special init-methods implement this protocol
+//Instead of building methods for every single view-type (as we have) we can use this to overload the important aspects instead - AND have it usable to any class (not just UIView-like classes).
+@protocol AutoStandardElement <NSObject>
+
+///called once at creation
++ (instancetype) viewWithDelegate:(id)delegate inView:(UIView*)superView;
+
+@optional
+
+///called at creation and whenever views change
+- (void) setAppearance:(AutoStandards*)autoStandards;
+
+@end
+
+/**
+ We have started to separate the layout object from the view/controller classes (which holds the frame rects), you use it like this:
+ - (void) layoutSubviews
+ {
+ 	self.layout = [MySpecialLayout new];
+ 	[self.layout performLayoutAnyWayYouLike];	//This method sets the rects
+ 	[AutoStandards setFrames:self];
+ }
+ 
+ Then you can "performLayout" before layoutSubviews, or whenever images are loaded/changed, etc. Allows for "offline" rendering.
+ 
+ OR
+ If I need to separate them (e.g. using a layout object), I can just put both the views AND the rects into a separate object.
+ 
+ @interface AutoStandardLayout : NSObject
+ @end
+ **/
 @interface AutoStandards : NSObject
 
 @property (nonatomic) CGFloat standardFontSize;
@@ -168,6 +284,7 @@ typedef NS_ENUM(NSUInteger, AutoSetValue)
 ///Make AutoStandard parse int colors (0-255) instead of floats (0-1).
 @property (nonatomic) BOOL useWebColors;
 @property (nonatomic) NSHashTable *viewControllers, *viewsWithActions;
+
 @property (nonatomic) NSDictionary *alternativeAppearances;
 ///The name of the current mode if there are several to choose from.
 @property (nonatomic) NSString *currentAppearance;
@@ -185,6 +302,7 @@ typedef NS_ENUM(NSUInteger, AutoSetValue)
 #pragma mark - colors and font
 
 + (BOOL) colorIsDark:(UIColor*)color;
++ (BOOL) mainBackgroundIsDark;
 - (UIFont*) fontWithType:(AutoFont)fontType;
 + (UIFont*) standardFont:(CGFloat)size;
 - (UIColor*) standardColor:(AutoColor)color;
@@ -193,7 +311,7 @@ typedef NS_ENUM(NSUInteger, AutoSetValue)
 #pragma mark - working with rects and sizing of views
 
 //get that pesky height of the status bar.
-CGFloat standardStatusBarHeight();
+CGFloat standardStatusBarHeight(void);
 ///Automatically center a rect inside a master rect, overwrites existing values.
 void AutoCenterFrameInFrame(CGRect* frame, CGRect master);
 ///Automatically center a view's frame inside a master frame, overwrites existing values.
@@ -202,6 +320,8 @@ void AutoCenterViewInFrame(UIView* target, CGRect master);
  Remove a slice of a rect, select where to make the cut by specifiting the CGRectEdge. Overwrites existing values.
  */
 void AutoSliceRect(CGRect *rect,  CGFloat amount, CGRectEdge edge);
+///Inset a views bounding rect using the safe area insets - perfect starting point when laying out views CGRect remainder = AutoSafeAreaInset(self.view);
+CGRect AutoSafeAreaInset(UIView* view);
 
 #pragma mark - images
 
@@ -222,30 +342,35 @@ void AutoSliceRect(CGRect *rect,  CGFloat amount, CGRectEdge edge);
 
 - (UIProgressView*) progressView:(UIView*)superView;
 - (void) progressAppearance:(UIProgressView*)progress;
++ (void) setPlaceholder:(NSString*)placeholder forTextField:(UITextField*)textField;
 - (UITextField*) textField:(id<UITextFieldDelegate>)delegate placeholder:(NSString*)placeholder inView:(UIView*)superView;
-- (UISlider*) slider:(id)target inView:(UIView*)superView;
+- (UISlider*) sliderWithName:(NSString*)propertyString target:(id)target inView:(UIView*)superView;
 - (UIView*) viewInView:(UIView*)superView;
 - (UIPageControl*) pageControlWithTarget:(id)target inView:(UIView*)superView;
 - (UIImageView*) imageViewWithImage:(UIImage*)image inView:(UIView*)superView;
 - (UIActivityIndicatorView*) spinnerInView:(UIView*)superView;
 - (UITextView*) textViewWithDelegate:(id<UITextViewDelegate>)delegate inView:(UIView*)superView;
-- (UILabel*) labelInView:(UIView*)view;
+- (UILabel*) labelWithDelegate:(id)delegate inView:(UIView*)view;
 - (UIDatePicker*) datePickerWithMode:(UIDatePickerMode)pickerMode target:(id)target selector:(SEL)selector inView:(UIView*)superView;
 - (UIStepper*) stepperWithTarget:(id)target inView:(UIView*)superView;
 
 /**
- Create a basic segmentedControl, you will need to add segments and set selections yourself. Like this:
+ Create a basic segmentedControl, have a automatic property: NSArray *<NSString*> segment-name-Titles
+ or you will need to add segments and set selections yourself. Like this:
  [control insertSegmentWithTitle:AutoLocalizedString(@"Admin") atIndex:3 animated:NO];
+ But you always need to manually set initial selection:
  [control setSelectedSegmentIndex:0];
  */
-- (UISegmentedControl*) segmentedControlWithTarget:(id)target inView:(UIView*)superView;
+- (UISegmentedControl*) segmentedControlWithName:(NSString*)propertyName target:(id)target inView:(UIView*)superView;
+///To make specific setups, implement AutoStandardDelegate button setup method 
 - (UIButton*) buttonWithName:(NSString*)propertyName target:(id)target inView:(UIView*)view;
-- (UIButton*) buttonWithTitle:(NSString*)title target:(id)target inView:(UIView*)view;
-- (UIButton*) buttonWithImage:(UIImage*)image highlight:(UIImage*)highlight target:(id)target inView:(UIView*)view;
-- (UIButton*) buttonWithImageName:(NSString*)image tint:(BOOL)tint target:(id)target inView:(UIView*)view;
+///Setup a bar item with a button which responds to clicks and have a custom view. Note that you need to set widths yourself!
+- (UIBarButtonItem*) barButtonWithName:(NSString*)propertyName target:(id)target inView:(UIView*)view;
 
 - (UITableView*) tableView:(id)delegate inView:(UIView*)view;
 - (void) tableAppearance:(UITableView*)table;
+- (void) buttonAppearance:(UIButton*)view;
+- (void) labelAppearance:(UILabel*)view;
 
 #pragma mark - appearance for stuff we don't create
 
@@ -258,13 +383,16 @@ void AutoSliceRect(CGRect *rect,  CGFloat amount, CGRectEdge edge);
 ///Calculate the bounding box of a string using the standard font
 + (CGSize) string:(NSString*)string constrainedToSize:(CGSize)size;
 ///Calculate the bounding box of a string, supply no font in order to use the standard font
-+ (CGSize) string:(NSString*)string constrainedToSize:(CGSize)size fontSize:(float)fontSize font:(UIFont *)font;
++ (CGSize) string:(NSString*)string constrainedToSize:(CGSize)size fontSize:(CGFloat)fontSize font:(UIFont *)font;
 
 ///Shrink a font - fix this. It isn't working!
 + (CGFloat) actualFontSizeForString:(NSString*)string font:(UIFont*)font constrainedToSize:(CGSize)size;
 
+///Calculate sizes for attributed strings
++ (CGSize) attributedString:(NSAttributedString*)string constrainedToSize:(CGSize)size;
+
 ///Shrink all of a segment's labels to fit a width. TODO: have seen it behave badly. Fixme.
-+ (void)autoShrinkSegmentLabels:(UISegmentedControl*)segmentedControl;
++ (void) autoShrinkSegmentLabels:(UISegmentedControl*)segmentedControl;
 
 #pragma mark - Do all at once, create and set values
 
@@ -308,7 +436,14 @@ void AutoSliceRect(CGRect *rect,  CGFloat amount, CGRectEdge edge);
 
 /**
  Set more complex Appearances that have both font and color. If you use the standard font, you may use the regular function (color:forView:method:) instead.
- To only set the font, specify method = AutoSetValueFont. For use with simple labels that don't have attributed text.
+ To only set the font, specify method = AutoSetValueFont, color = AutoColorNothing. For use with simple buttons/switches/segments that don't have attributed text.
+ 
+ To set font descriptors, do this:
+ [AutoStandards font:AutoFontSmall color:AutoColorBodyText extraAttributes:@{ @"AutoFontDescriptor" : @{UIFontDescriptorTraitsAttribute: @{ UIFontSymbolicTrait: @( UIFontDescriptorTraitBold) }}} forView:self.label method:AutoSetValueFont];
+ 
+ Or an example with another key:
+ [AutoStandards font:AutoFontSmall color:AutoColorBodyText extraAttributes:@{ @"AutoFontDescriptor" : @{UIFontDescriptorTraitsAttribute: @{ UIFontWeightTrait : @(UIFontWeightHeavy) }}} forView:self.label method:AutoSetValueFont];
+ 
  */
 - (void) font:(AutoFont)fontType color:(AutoColor)colorType extraAttributes:(NSDictionary*)extraAttributes forView:(UIView*)view method:(AutoSetValue)method;
 
@@ -328,6 +463,15 @@ Creates and sets widgets (UIViews, BarButtonItems, and any other GUI object). Ov
  AutoStandards takes the classString from your property in order to know what class to instansiate. 
  */
 - (id) standardWidgetNamed:(NSString*)propertyString fromString:(NSString*)classString delegate:(id)delegate superView:(UIView*)view;
+
+#pragma mark - helpers
+
+///Find which viewController is corrently presented root
++ (UIViewController*) topViewController;
+///Display an alertview with action-blocks. Set cancelBlock to nil if you only want one button.
++ (void) displayAlertWithTitle:(NSString*)title message:(NSString*)message cancelBlock:(dispatch_block_t)cancelBlock okBlock:(dispatch_block_t)okBlock;
+///Display an alertview with action-blocks. Set cancelBlock to nil if you only want one button.
++ (void) displayAlertWithTitle:(NSString*)title message:(NSString*)message cancelTitle:(NSString *)cancelTitle okTitle:(NSString*)okTitle cancelBlock:(dispatch_block_t)cancelBlock okBlock:(dispatch_block_t)okBlock;
 
 #pragma mark - standard components - Depricated or refactor before use
 
@@ -351,5 +495,28 @@ Creates and sets widgets (UIViews, BarButtonItems, and any other GUI object). Ov
 
 ///Uses hard-coded values, should not exist.
 - (CGSize) standardSwitchSize;
+
+@end
+
+typedef NS_OPTIONS(u_int64_t, AutoClassDefinition)
+{
+    AutoClassDefinitionTextAlignment = 1,
+    AutoClassDefinitionFontStyle = 1 << 1,
+    AutoClassDefinitionFontSize = 1 << 2,
+};
+
+@interface AutoStandardClassDefinition : NSObject
+{}
+
+///All keys used in this definition is stored here, for easy looping!
+@property (nonatomic) AutoClassDefinition definedKeys;
+
+@property (nonatomic) NSTextAlignment textAlignment;
+@property (nonatomic) AutoFont fontStyle;
+@property (nonatomic) NSInteger fontSize;
+@property (nonatomic) NSHashTable *implementedViews;
+
+- (instancetype) initWithDictionary:(NSDictionary*)rule;
+- (void) implementOn:(UIView*)view;
 
 @end

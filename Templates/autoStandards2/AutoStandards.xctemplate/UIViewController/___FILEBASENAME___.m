@@ -7,12 +7,13 @@
 //
 
 #import "___FILEBASENAME___.h"
-#import "AutoStandards.h"
 
 @interface ___FILEBASENAMEASIDENTIFIER___ ()
 {
     CGRect tempButtonRect;
 }
+
+@property (nonatomic) UIButton *tempButton;
 
 @end
 
@@ -46,11 +47,22 @@
     int buttonHeight = 44;
     
     CGRect remainder = self.view.bounds;
-    if ([self respondsToSelector:@selector(topLayoutGuide)])
+	CGFloat topBarOffset = 0;
+	if (@available(iOS 11.0, *))
+	{
+		topBarOffset = self.safeAreaInsets.top;
+	}
+	else if ([self respondsToSelector:@selector(topLayoutGuide)])
     {
-        CGFloat topBarOffset = self.topLayoutGuide.length;
-        AutoSliceRect(&remainder, topBarOffset, CGRectMinYEdge);
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+			
+        topBarOffset = self.topLayoutGuide.length;
+			
+		#pragma clang diagnostic pop
     }
+	if (topBarOffset)
+		AutoSliceRect(&remainder, topBarOffset, CGRectMinYEdge);
     
     CGRectDivide(remainder, &tempButtonRect, &remainder, buttonHeight, CGRectMinYEdge);
     tempButtonRect = CGRectInset(tempButtonRect, margin, margin);

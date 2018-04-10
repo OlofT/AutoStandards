@@ -7,7 +7,8 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "AutoStandards.h"
 
-@interface ___FILEBASENAMEASIDENTIFIER___ : UIViewController
+@interface ___FILEBASENAMEASIDENTIFIER___ : UIViewController <AutoStandardDelegate>
 
 @end
