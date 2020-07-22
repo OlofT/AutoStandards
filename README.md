@@ -1,3 +1,5 @@
+(NOTE: As of SwiftUI this is not particularly useful anymore.)
+
 # AutoStandards
 Automatic GUI creation for iOS by using standards. Instead of managing some of the GUI in xib or storyboard files, and some in code - have everything in one place. When changing the font for every label and button, just change it once in one place - for all your application. Instead of going through every view in every xib to change the background color, define a standard for "background color" and change it once - everything that use "background color" will be updated. Confused by what I mean with "a standard"? Just read on! (for more on this see [my blog post about this](https://aggressive.se/blog/#post=removing-storyboards-and-xib-files-to-save-time-and-money)).
 
